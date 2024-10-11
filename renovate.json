@@ -8,9 +8,9 @@ module.exports = {
     "mergeConfidence:all-badges",
   ],
   // Limit to just Bazel related managers
-  enabledManagers: ["pip_requirements", "pipenv"],
+  enabledManagers: ["pip_requirements"],
   allowedPostUpgradeCommands: [
-    ".*bazel run .*$",
+    ".*echo.*$",
   ],
   packageRules: [
     // common settings
@@ -23,14 +23,11 @@ module.exports = {
     {
       "matchFileNames": [
         "**/requirements.in",
-        "**/requirements-test.in",
       ],
       // update the lock file after updating the requirements file
       "postUpgradeTasks": {
         "commands": [
-          // Bazel's rules_python requires this environment variable to be set.
-          // Otherwise, bazel doesn't use the config file and can't find first party dependencies because it doesn't use the internal registry.
-          "export PIP_CONFIG_FILE=/home/ubuntu/.config/pip/pip.conf && bazel run //:requirements.update"
+          "echo 'test' >> requirements_lock.txt"
         ],
         // run the task only once after all versions have been updated
         "executionMode": "branch"
