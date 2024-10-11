@@ -1,0 +1,53 @@
+module.exports = {
+  "extends": [
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreModulesAndTests",
+    "replacements:all",
+    "workarounds:all",
+    ":pinDevDependencies",
+    "mergeConfidence:all-badges",
+  ],
+  // Limit to just Bazel related managers
+  enabledManagers: ["pip_requirements", "pipenv"],
+  allowedPostUpgradeCommands: [
+    ".*bazel run .*$",
+  ],
+  packageRules: [
+    // common settings
+    {
+      "enabled": true,
+      "matchDatasources": ["pypi"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+    },
+    // pypi settings
+    {
+      "matchFileNames": [
+        "**/requirements.in",
+        "**/requirements-test.in",
+      ],
+      // update the lock file after updating the requirements file
+      "postUpgradeTasks": {
+        "commands": [
+          // Bazel's rules_python requires this environment variable to be set.
+          // Otherwise, bazel doesn't use the config file and can't find first party dependencies because it doesn't use the internal registry.
+          "export PIP_CONFIG_FILE=/home/ubuntu/.config/pip/pip.conf && bazel run //:requirements.update"
+        ],
+        // run the task only once after all versions have been updated
+        "executionMode": "branch"
+      },
+    },
+
+    // common settings
+    // These common settings are higher priority than the above settings.
+    // They are specifically necessary to override any non-common settings that are not desired, for example grouping of major versions together via groupName.
+    {
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+    }
+  ],
+  pip_requirements: {
+    "fileMatch": [
+      "^requirements.*\\.in$"
+    ]
+  },
+}
